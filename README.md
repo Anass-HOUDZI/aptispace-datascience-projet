@@ -1,7 +1,5 @@
 # Mon Projet Data Science
-Étudiant(e) 1 : \[Insérer Prénom Nom\], Étudiant(e) 2 : \[Insérer Prénom
-Nom\], Étudiant(e) 3 : \[Insérer Prénom Nom\]
-2026-05-18
+Anass HOUDZI, Baptiste MAES
 
 - [Introduction et Contexte Métier](#sec-intro)
   - [Contexte du Projet](#contexte-du-projet)
