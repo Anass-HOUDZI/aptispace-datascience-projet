@@ -1,4 +1,4 @@
-﻿# PowerShell Script for Automated Environment Setup on Windows using Chocolatey
+# PowerShell Script for Automated Environment Setup on Windows using Chocolatey
 $ErrorActionPreference = "Stop"
 
 # Vérification des privilèges Administrateur
@@ -13,7 +13,7 @@ Write-Host "🚀 Démarrage de l'installation automatisée pour Windows..." -For
 # 1. Vérification et installation de Chocolatey
 if (-not (Get-Command choco -ErrorAction SilentlyContinue)) {
     Write-Host "ℹ️ Chocolatey n'est pas détecté. Installation de Chocolatey en cours..." -ForegroundColor Yellow
-    Set-ExecutionPolicy Bypass -Scope Process -Force
+    Set-ExecutionPolicy Bypass -Scope Process -Force -ErrorAction Ignore
     [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
     Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
 } else {
@@ -56,4 +56,5 @@ choco install go-task -y
 
 Write-Host "✅ Installation terminée avec succès !" -ForegroundColor Green
 Write-Host "⚠️ IMPORTANT : Veuillez fermer et rouvrir votre terminal pour appliquer les changements globaux de PATH." -ForegroundColor Yellow
+
 
