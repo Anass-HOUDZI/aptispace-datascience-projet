@@ -56,3 +56,4 @@ choco install go-task -y
 
 Write-Host "✅ Installation terminée avec succès !" -ForegroundColor Green
 Write-Host "⚠️ IMPORTANT : Veuillez fermer et rouvrir votre terminal pour appliquer les changements globaux de PATH." -ForegroundColor Yellow
+
