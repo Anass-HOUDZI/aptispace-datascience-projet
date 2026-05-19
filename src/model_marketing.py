@@ -12,67 +12,60 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 
 def train_and_evaluate_model(input_path: str):
     start_time = time.perf_counter()
+    sns.set_theme(style="whitegrid", context="paper")
     
-    # 1. INGESTION HAUTE PERFORMANCE (Fichier Parquet)
-    logging.info(f"Chargement du fichier {input_path} en RAM...")
+    logging.info(f"Chargement des données depuis {input_path}...")
     df = pd.read_parquet(input_path)
     
-    # 2. PRÉPARATION DES VECTEURS D'ENTRAÎNEMENT (X et y)
-    # On détruit les variables qui ne sont pas des Features prédictives
     cols_to_drop = ['ID', 'Dt_Customer', 'Year_Birth', 'Response', 'Income_Strata', 'Education']
     X = df.drop(columns=cols_to_drop)
-    y = df['Response'].astype('int8') # Target
+    y = df['Response'].astype('int8')
     
-    # 3. SPLIT STRATIFIÉ (80% Train / 20% Test)
-    # 'stratify=y' garantit qu'il y aura bien 15% de "Oui" dans le Train ET dans le Test
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.2, stratify=y, random_state=42
     )
-    logging.info(f"Dimensions Train: {X_train.shape} | Dimensions Test: {X_test.shape}")
+    logging.info(f"Dimensions Train: {X_train.shape} | Test: {X_test.shape}")
 
-    # 4. ENTRAÎNEMENT DE L'ALGORITHME (Multi-threading CPU)
-    logging.info("Entraînement du modèle RandomForest (class_weight='balanced')...")
+    logging.info("Entraînement du modèle RandomForest...")
     rf_model = RandomForestClassifier(
-        n_estimators=300,        # Nombre d'arbres
-        max_depth=10,            # Profondeur max pour éviter l'Overfitting
-        class_weight='balanced', # Pénalise les erreurs sur la classe minoritaire (Oui)
-        n_jobs=-1,               # Utilise tous les cœurs du CPU
+        n_estimators=300,
+        max_depth=10,
+        class_weight='balanced',
+        n_jobs=-1,
         random_state=42
     )
     rf_model.fit(X_train, y_train)
 
-    # 5. ÉVALUATION ET DIAGNOSTIC MÉTIER
-    logging.info("Inférence sur le set de Test et génération du rapport...")
+    logging.info("Évaluation du modèle...")
     y_pred = rf_model.predict(X_test)
     
     print("\n" + "="*50)
-    print("RAPPORT DE CLASSIFICATION MÉTIER")
+    print("RAPPORT DE CLASSIFICATION")
     print("="*50)
-    # Focus sur le F1-Score, le Recall et la Precision
     print(classification_report(y_test, y_pred))
     
-    # 6. MATRICE DE CONFUSION
     cm = confusion_matrix(y_test, y_pred)
-    plt.figure(figsize=(6, 4))
-    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', cbar=False)
-    plt.title('Matrice de Confusion (Test Set)')
-    plt.xlabel('Prédiction Algorithmique')
-    plt.ylabel('Réalité Métier (Ground Truth)')
-    plt.show()
-    
-    # 7. FEATURE IMPORTANCE (L'explicabilité pour le métier)
-    # Quelles sont les variables qui ont réellement déclenché l'achat ?
-    importances = pd.Series(rf_model.feature_importances_, index=X.columns)
-    top_10 = importances.nlargest(10)
-    
-    plt.figure(figsize=(10, 6))
-    sns.barplot(x=top_10.values, y=top_10.index, hue=top_10.index, palette='magma', legend=False)
-    plt.title('Top 10 des Facteurs Déclencheurs d\'Achat (Feature Importance)')
-    plt.xlabel('Poids dans la décision de l\'algorithme')
+    plt.figure(figsize=(8, 6))
+    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', cbar=False, annot_kws={'size': 14})
+    plt.title('Matrice de Confusion', fontsize=16, fontweight='bold', pad=15)
+    plt.xlabel('Prédiction', fontsize=12)
+    plt.ylabel('Réalité', fontsize=12)
     plt.tight_layout()
     plt.show()
     
-    logging.info(f"PROCESSUS MACHINE LEARNING TERMINÉ EN {time.perf_counter() - start_time:.3f} SECONDES.")
+    importances = pd.Series(rf_model.feature_importances_, index=X.columns)
+    top_10 = importances.nlargest(10)
+    
+    plt.figure(figsize=(10, 8))
+    sns.barplot(x=top_10.values, y=top_10.index, hue=top_10.index, palette='mako', legend=False)
+    plt.title('Importance des Variables (Top 10)', fontsize=16, fontweight='bold', pad=15)
+    plt.xlabel('Importance', fontsize=12)
+    plt.ylabel('Variables', fontsize=12)
+    sns.despine()
+    plt.tight_layout()
+    plt.show()
+    
+    logging.info(f"Processus terminé en {time.perf_counter() - start_time:.3f} secondes.")
 
 if __name__ == "__main__":
     from pathlib import Path

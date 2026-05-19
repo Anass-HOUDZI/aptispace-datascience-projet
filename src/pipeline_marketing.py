@@ -12,9 +12,9 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 
 def process_pipeline(filepath: str, output_path: str):
     start_time = time.perf_counter()
+    sns.set_theme(style="whitegrid", context="paper")
     
-    # --- PHASE 1 : INGESTION ---
-    logging.info("PHASE 1 : Ingestion Optimisée & Sanity Check...")
+    logging.info("Ingestion des données...")
     dtypes_schema = {
         'ID': 'int32', 'Year_Birth': 'int16', 
         'Education': 'category', 'Marital_Status': 'category',
@@ -30,11 +30,8 @@ def process_pipeline(filepath: str, output_path: str):
     
     colonnes_utiles = list(dtypes_schema.keys()) + ['Dt_Customer']
     df = pd.read_csv(filepath, sep='\t', usecols=colonnes_utiles, dtype=dtypes_schema, engine='c')
-    print("\n--- AUDIT MÉMOIRE (Sanity Check) ---")
-    df.info(memory_usage='deep')
 
-    # --- PHASE 2 : DATA WRANGLING ---
-    logging.info("PHASE 2 : Data Wrangling & Encodage...")
+    logging.info("Nettoyage et encodage des données...")
     df['Income_Missing_Flag'] = df['Income'].isna().astype('int8')
     df['Income'] = df['Income'].fillna(df['Income'].median())
     
@@ -55,38 +52,37 @@ def process_pipeline(filepath: str, output_path: str):
     df_scaled = df.copy()
     df_scaled[mnt_cols] = scaler.fit_transform(df_scaled[mnt_cols].astype(np.float32))
 
-    # --- PHASE 3 & 4 : EDA & GRAPHIQUES ---
-    logging.info("PHASE 3 & 4 : Analyse Exploratoire & Visualisation...")
-    
-    # 1. PCA
+    logging.info("Analyse exploratoire et visualisation...")
     pca = PCA(n_components=2)
     pca_result = pca.fit_transform(df_scaled[mnt_cols])
-    plt.figure(figsize=(8, 6))
-    plt.scatter(pca_result[:, 0], pca_result[:, 1], c=df_scaled['Response'], cmap='coolwarm', alpha=0.6, s=15)
-    plt.title('PCA: Comportements financiers (Rouge = Achat)')
-    plt.colorbar(label='Response')
+    
+    plt.figure(figsize=(10, 8))
+    scatter = plt.scatter(pca_result[:, 0], pca_result[:, 1], c=df_scaled['Response'], cmap='coolwarm', alpha=0.8, s=50, edgecolors='w', linewidth=0.5)
+    plt.title('PCA: Comportements Financiers', fontsize=16, fontweight='bold', pad=15)
+    plt.xlabel('Composante Principale 1', fontsize=12)
+    plt.ylabel('Composante Principale 2', fontsize=12)
+    cbar = plt.colorbar(scatter)
+    cbar.set_label('Achat (Response)', fontsize=12)
+    sns.despine()
+    plt.tight_layout()
     plt.show()
     
-    # 2. Matrice Phik
     cols_of_interest = ['Education_Encoded', 'Income', 'MntWines', 'NumWebPurchases', 'NumStorePurchases', 'Age', 'Response']
     phik_matrix = df[cols_of_interest].astype(float).phik_matrix(interval_cols=['MntWines', 'NumWebPurchases', 'NumStorePurchases', 'Age', 'Income'])
-    plot_correlation_matrix(phik_matrix.values, x_labels=phik_matrix.columns, y_labels=phik_matrix.index, vmin=0, vmax=1, title="Matrice Phik")
+    plot_correlation_matrix(phik_matrix.values, x_labels=phik_matrix.columns, y_labels=phik_matrix.index, vmin=0, vmax=1, title="Matrice Phik", fontsize_factor=1.2)
     plt.show()
 
-    # 3. Segmentation Cythonisée
     df['Income_Strata'] = pd.qcut(df['Income'], q=4, labels=['Pauvre', 'Moyen-Bas', 'Moyen-Haut', 'Riche'])
     kpi = df.groupby('Income_Strata', observed=False).agg(
         Total_Wines_Median=('MntWines', 'median'),
         Total_Meat_Median=('MntMeatProducts', 'median'),
         Conversion_Rate=('Response', 'mean')
     )
-    print("\n--- SYNTHÈSE DE SEGMENTATION ---")
-    print(kpi)
+    logging.info(f"Synthèse de segmentation:\n{kpi}")
 
-    # --- PHASE 5 : EXPORT PARQUET ---
     df.to_parquet(output_path, engine="pyarrow")
-    logging.info(f"Export terminé : {output_path} généré.")
-    logging.info(f"PIPELINE TERMINÉ EN {time.perf_counter() - start_time:.3f} SECONDES.")
+    logging.info(f"Export terminé : {output_path}")
+    logging.info(f"Pipeline terminé en {time.perf_counter() - start_time:.3f} secondes.")
 
 if __name__ == "__main__":
     from pathlib import Path
