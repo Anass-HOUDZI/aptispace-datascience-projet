@@ -1,4 +1,4 @@
-# Mon Projet Data Science
+# Customer Personality Analysis
 Anass HOUDZI, Baptiste MAES
 
 - [Introduction et Contexte Métier](#sec-intro)
