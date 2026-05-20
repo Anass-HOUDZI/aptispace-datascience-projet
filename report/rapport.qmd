@@ -2,8 +2,8 @@
 title: "Mon Projet Data Science"
 subtitle: "Projet Fil Rouge Data Science - Sujet Libre"
 author:
-  - "Étudiant(e) 1 : Anass HOUDZI
-  - "Étudiant(e) 2 : Baptiste MAES
+  - "Étudiant(e) 1 : Anass HOUDZI"
+  - "Étudiant(e) 2 : Baptiste MAES"
   # Remplacer par vos noms et votre numéro de groupe
 date: today
 format:
