@@ -9,7 +9,7 @@
 .quarto/
 
 # Fichiers de notebooks compilés
-notebooks/*.qmd
+# notebooks/*.qmd
 
 # Conserver les fichiers sources importants
 !rapport.qmd

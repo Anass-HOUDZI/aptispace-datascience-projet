@@ -39,3 +39,5 @@ Thumbs.db
 
 *.pdf
 *.html
+/INSTALL.md
+/README.md
