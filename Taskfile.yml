@@ -16,7 +16,6 @@ tasks:
     cmds:
       - task: compile
       - quarto render report/rapport.qmd
-      - cp report/README.md ./README.md
 
   html:
     desc: Compile les notebooks puis génère le rapport au format HTML uniquement
@@ -35,7 +34,6 @@ tasks:
     cmds:
       - task: compile
       - quarto render report/rapport.qmd --to gfm
-      - cp report/README.md ./README.md
 
   preview:
     desc: Compile les notebooks puis démarre le serveur de prévisualisation dynamique Quarto
@@ -47,4 +45,3 @@ tasks:
     desc: Génère le guide d'installation sous tous les formats (HTML, PDF, Markdown) et met à jour INSTALL.md à la racine
     cmds:
       - quarto render report/installation.qmd
-      - cp report/INSTALL.md ./INSTALL.md

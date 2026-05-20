@@ -50,17 +50,25 @@ jobs:
           task render
           task install-guide
 
-      - name: Commit and push compiled files
+      - name: Prepare Artifacts for Release
         run: |
-          git config --local user.name "github-actions[bot]"
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          # Création des archives
+          zip -r logs.zip logs/
+          zip -r sources.zip src/
+          zip -r notebooks.zip report/notebooks/
           
-          # Ajout forcé des fichiers compilés / générés par les tâches
-          git add -f README.md INSTALL.md src/0*_*.py logs/*.log report/notebooks/*.qmd report/rapport.html report/rapport.pdf report/rapport.qmd
-          
-          if [ -n "$(git status --porcelain)" ]; then
-            git commit -m "Auto: Update compiled outputs (README, INSTALL, scripts, includes and logs) [skip ci]"
-            git push
-          else
-            echo "Aucune modification à commiter."
-          fi
+      - name: Create or Update Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: Dernière Compilation (Automatique)
+          body: Rapports et codes compilés automatiquement par le pipeline CI/CD.
+          make_latest: true
+          files: |
+            logs.zip
+            sources.zip
+            notebooks.zip
+            report/rapport.html
+            report/rapport.pdf
+            report/README.md
+            report/INSTALL.md
