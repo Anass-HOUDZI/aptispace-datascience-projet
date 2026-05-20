@@ -116,6 +116,29 @@ Nous présentons ici les résultats visuels clés permettant de dégager des ins
 ```
 [Commenter la figure et décrire vos observations ici]
 
+## Exploration Interactive (Plotly)
+```python
+#| label: fig-interactive
+#| fig-cap: "Visualisation interactive des données avec Plotly."
+#| echo: false
+import pandas as pd
+import numpy as np
+import src.utils_viz as uv
+
+# Exemple de données simulées pour la démonstration
+np.random.seed(42)
+df_sample = pd.DataFrame({
+    'Feature_A': np.random.normal(0, 1, 100),
+    'Feature_B': np.random.normal(5, 2, 100),
+    'Category': np.random.choice(['Groupe 1', 'Groupe 2'], 100)
+})
+
+# Utilisation de la nouvelle fonction Plotly
+fig = uv.plot_interactive_scatter(df_sample, x_col='Feature_A', y_col='Feature_B', color_col='Category')
+fig.show()
+```
+[Ce graphique est généré avec Plotly et sera entièrement interactif dans la version HTML du rapport.]
+
 ---
 
 # Modélisation et Apprentissage {#sec-modelling}

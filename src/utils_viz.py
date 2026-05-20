@@ -2,6 +2,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
 import numpy as np
+import plotly.express as px
+import plotly.graph_objects as go
 from typing import List, Optional
 
 def set_custom_style(theme: str = 'light'):
@@ -134,4 +136,43 @@ def plot_bivariate_scatter(df: pd.DataFrame, x_col: str, y_col: str, color_col: 
     ax.set_ylabel(y_col)
     ax.set_title(f"Nuage de points : {y_col} en fonction de {x_col}")
     fig.tight_layout()
+    return fig
+
+def plot_interactive_scatter(df: pd.DataFrame, x_col: str, y_col: str, color_col: Optional[str] = None, hover_data: Optional[List[str]] = None) -> go.Figure:
+    """
+    Génère un nuage de points interactif avec Plotly.
+    
+    Parameters:
+    -----------
+    df : pd.DataFrame
+        Le DataFrame d'entrée.
+    x_col : str
+        Nom de la colonne sur l'axe X.
+    y_col : str
+        Nom de la colonne sur l'axe Y.
+    color_col : Optional[str], default None
+        Optionnel : Nom de la colonne pour la coloration des points.
+    hover_data : Optional[List[str]], default None
+        Optionnel : Liste de colonnes à afficher au survol.
+        
+    Returns:
+    --------
+    go.Figure
+        La figure Plotly interactive.
+    """
+    fig = px.scatter(
+        df, 
+        x=x_col, 
+        y=y_col, 
+        color=color_col,
+        hover_data=hover_data,
+        title=f"Nuage de points interactif : {y_col} vs {x_col}",
+        template="plotly_white"
+    )
+    
+    fig.update_layout(
+        title_font_size=16,
+        title_x=0.5,
+        margin=dict(l=40, r=40, t=60, b=40)
+    )
     return fig

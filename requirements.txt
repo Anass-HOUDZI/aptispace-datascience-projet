@@ -15,3 +15,6 @@ plotnine>=0.12.0
 ipykernel
 jupyter
 quarto
+
+# Graphiques interactifs
+plotly>=5.14.0
