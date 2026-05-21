@@ -37,20 +37,21 @@ link-citations: true
 *À rédiger par les étudiants : Présentez ici le contexte global de votre projet, la problématique métier que vous cherchez à résoudre, les questions scientifiques soulevées et les opportunités d'aide à la décision sur la base de vos données.*
 
 ## Contexte du Projet
-*À rédiger par les étudiants — Pistes de réflexion :*
-- *Quels sont les objectifs globaux et le domaine d'étude de votre projet ?*
-- *En quoi ce sujet de recherche est-il pertinent et stratégique ?*
-- *Pourquoi l'analyse quantitative de ce jeu de données est-elle indispensable pour répondre à votre problématique ?*
 
-[Rédiger votre paragraphe de contexte ici]
+Ce projet s'inscrit dans le cadre de l'optimisation des campagnes marketing d'une entreprise de vente au détail. Le jeu de données `marketing_campaign.csv` (2 240 clients, 29 variables) compile l'historique transactionnel, les profils socio-démographiques et les réponses passées à cinq campagnes promotionnelles.
+
+La problématique est stratégique : face à un taux de conversion inférieur à 15 %, l'entreprise doit cibler chirurgicalement les profils les plus susceptibles d'acheter lors de la prochaine campagne. Une mauvaise classification entraîne soit un gaspillage budgétaire (faux positifs), soit un manque à gagner (faux négatifs). L'analyse quantitative est indispensable pour dépasser l'intuition commerciale et objectiver ces décisions.
 
 ## Objectif Analytique
-*À rédiger par les étudiants — Pistes de réflexion :*
-- *Quelles sont les variables cibles principales et la tâche globale de modélisation (classification, régression, clustering, etc.) ?*
-- *Comment le couplage de données multi-sources et l'intégration de différents types de données (tabulaires, images, signaux, etc.) enrichissent-ils l'analyse ?*
-- *Quels sont les livrables analytiques attendus pour répondre à votre problématique et guider les prises de décisions ?*
 
-[Rédiger votre paragraphe d'objectifs ici]
+La variable cible est binaire : `Response` = 1 si le client a répondu à la dernière campagne, 0 sinon. La tâche est une **classification binaire déséquilibrée** (≈ 85 % / 15 %).
+
+Notre approche hybride couple deux sources de signal :
+
+- **Branche tabulaire** : variables financières (`MntWines`, `Income`…), comportementales (`NumWebPurchases`…) et socio-démographiques (`Age`, `Education`…), traitées par XGBoost avec correction du déséquilibre via `scale_pos_weight`.
+- **Branche séquentielle** : l'historique des 5 campagnes (`AcceptedCmp1` à `AcceptedCmp5`) est tensorisé et analysé par un CNN 1D Keras pour extraire des motifs d'engagement temporel latents.
+
+Les livrables attendus sont : un score de Recall élevé sur la classe 1 (acheteurs), une matrice de confusion interprétable et un classement des facteurs d'achat pour guider l'équipe CRM.
 
 ---
 
@@ -163,23 +164,42 @@ else:
 # Modélisation et Apprentissage {#sec-modelling}
 
 ## Schéma Global du Pipeline de Données
-Le pipeline complet intègre à la fois la branche analytique tabulaire (Machine Learning) et la branche d'analyse visuelle ou de signaux complexes (Deep Learning CNN) :
+Le pipeline illustre le cycle de vie complet de la donnée, depuis l'ingestion brute jusqu'à l'inférence, en intégrant la branche CNN 1D (motifs temporels de campagnes) et la branche XGBoost (features tabulaires).
 
-```mermaid
+```{mermaid}
 graph TD
-    A[Données Brutes Multi-Sources CSV/API] -->|Formatage & Alignement| B(data_clean.clean_dates)
-    C[Données Externes Complémentaires] -->|Imputation & Interpolation| D(data_clean.impute_missing_values)
-    B & D -->|Gestion Outliers| E[Jeu de données Propre & Fusionné]
-    E -->|Extraction Temporelle/Caractéristiques| F[Feature Engineering]
-    F -->|Splits Temporels ou Stratifiés| G[Modèle Machine Learning Tabulaire]
-    H[Flux Multimédias Réels Images/Signaux] -->|Prétraitement d'images/signaux| I[Réseau Convolutif CNN TensorFlow]
-    G -->|Prédictions de la Problématique Métier| J[Livrables & Aide à la Décision]
-    I -->|Détection de Motifs Complexes| J
-    
-    style E fill:#e0f2fe,stroke:#0284c7,stroke-width:2px
-    style J fill:#f0fdf4,stroke:#16a34a,stroke-width:2px
-    style G fill:#fef3c7,stroke:#d97706,stroke-width:2px
-    style I fill:#fef3c7,stroke:#d97706,stroke-width:2px
+    subgraph J1W["Jalon 1 : Ingestion & Data Wrangling"]
+        A[(marketing_campaign.csv)] -->|"pd.read_csv + engine C"| B["Downcasting natif\nint8, int16, Float32"]
+        B --> C{"Audit Mémoire\n& Typage"}
+        C --> D["Traitement MNAR\nIncome_Missing_Flag"]
+        D --> E["Harmonisation Textes\n& Temporelle ISO 8601"]
+    end
+
+    subgraph J1E["Jalon 1 : EDA & Préparation Algorithmique"]
+        E --> F["RobustScaler sur Mnt*\nEncodage Catégoriel"]
+        F --> G["Split-Apply-Combine Cython\nIncome_Strata"]
+        F --> H["Spearman & Phik Matrix\nDépendances Non-Linéaires"]
+        F --> I["PCA Projection 2D"]
+    end
+
+    subgraph J2M["Jalon 2 : Modélisation Hybride"]
+        F -->|"Séquence Temporelle"| J["Tensorisation 3D\nN x 5 x 1"]
+        J --> K["CNN 1D Keras\nExtraction de Motifs"]
+        K -->|"Vecteurs Latents 8D"| L(["Feature Extraction"])
+        F -->|"Features Tabulaires"| M["Concaténation hybride"]
+        L --> M
+        M --> N["XGBoost\nscale_pos_weight"]
+    end
+
+    subgraph J2E["Jalon 2 : Restitution & Inférence"]
+        N --> O["Évaluation Stratifiée\nAUC, F1-Score, Recall"]
+        O --> P[/"Dashboard Interactif\nPlotly / OJS"/]
+    end
+
+    style J1W fill:#eff6ff,stroke:#3b82f6,stroke-width:1px
+    style J1E fill:#f0fdf4,stroke:#22c55e,stroke-width:1px
+    style J2M fill:#fff7ed,stroke:#f97316,stroke-width:1px
+    style J2E fill:#fdf4ff,stroke:#a855f7,stroke-width:1px
 ```
 
 ## Modélisation Tabulaire (Machine Learning)
@@ -203,19 +223,25 @@ graph TD
 # Évaluation Métrique et Validation {#sec-evaluation}
 
 ## Stratégie de Validation
-*À rédiger par les étudiants : Expliquez pourquoi le découpage d'évaluation choisi (ex: validation temporelle, stratifiée ou par groupe) est adapté à la structure de vos données pour éviter les fuites de données.*
 
-[Rédiger la section de validation ici]
+Le split est **stratifié** (80 % train / 20 % test, `stratify=y`, `random_state=42`) pour préserver la proportion de la classe minoritaire (acheteurs) dans chaque partition. Le déséquilibre est corrigé en amont par le paramètre `scale_pos_weight = n_négatifs / n_positifs` de XGBoost, ce qui évite le biais vers la classe majoritaire sans sur-échantillonnage artificiel.
 
-## Résultats et Interprétation
-*À rédiger par les étudiants : Complétez le tableau d'évaluation ci-dessous en reportant vos résultats de modélisation.*
+Les métriques retenues sont le **Recall sur la classe 1** (minimiser les faux négatifs = clients acheteurs non ciblés), le **F1-Score** (équilibre précision/recall) et l'**AUC-ROC** (robustesse au seuil de décision).
 
-| Modèle | Métrique 1 (ex: MAE / Précision) | Métrique 2 (ex: RMSE / F1-Score) | R² / Score (%) |
-|--------|-----------------|------------------|-----------|
-| Baseline (ex: Naïve / Moyenne) | [À compléter] | [À compléter] | [À compléter] |
-| **Modèle Choisi** | **[À compléter]** | **[À compléter]** | **[À compléter]** |
+## Travaux Pratiques d'Industrialisation (Entraînement)
+{{< include notebooks/05_modelisation.qmd >}}
 
-[Interpréter et comparer les métriques d'erreur calculées ici]
+## Travaux Pratiques d'Évaluation (Résultats)
+{{< include notebooks/06_evaluation.qmd >}}
+
+## Tableau de Synthèse des Résultats
+
+| Modèle | Recall (classe 1) | F1-Score (classe 1) | Accuracy |
+|--------|:-----------------:|:-------------------:|:--------:|
+| Baseline (prédire toujours 0) | 0.00 | 0.00 | 85% |
+| **XGBoost + CNN 1D (hybride)** | **0.55** | **0.56** | **87%** |
+
+*Résultats obtenus sur le jeu de test stratifié (20%, n=448). Le `scale_pos_weight` corrige le déséquilibre 85/15.*
 
 ---
 

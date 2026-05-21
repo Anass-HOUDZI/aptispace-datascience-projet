@@ -1,0 +1,35 @@
+# 🚀 Jalon 3 : Industrialisation de l'entraînement (XGBoost + CNN 1D)
+
+Ce notebook orchestre l'entraînement du pipeline hybride défini dans `src/model_marketing.py` et persiste le modèle final sur disque (`joblib`) pour permettre une évaluation indépendante dans le notebook `06_evaluation.qmd`.
+
+La logique métier (split stratifié, extraction de motifs temporels par CNN 1D, correction du déséquilibre via `scale_pos_weight`, entraînement XGBoost) est entièrement encapsulée dans `train_hybrid_pipeline` — ce notebook ne fait qu'invoquer le moteur.
+
+### 1. Import du pipeline
+
+```{python}
+import os
+import sys
+
+racine_projet = os.path.abspath('../../')
+if racine_projet not in sys.path:
+    sys.path.append(racine_projet)
+
+from src.model_marketing import train_hybrid_pipeline
+import joblib
+```
+
+### 2. Entraînement et persistance
+
+```{python}
+DATA_PATH = os.path.join(racine_projet, "data", "processed", "marketing_clean.parquet")
+MODEL_PATH = os.path.join(racine_projet, "data", "processed", "xgb_model.pkl")
+CNN_PATH = os.path.join(racine_projet, "data", "processed", "cnn_extractor.keras")
+
+xgb_model, cnn_model = train_hybrid_pipeline(DATA_PATH)
+
+joblib.dump(xgb_model, MODEL_PATH)
+cnn_model.save(CNN_PATH)
+
+print(f"Modèle XGBoost sauvegardé : {MODEL_PATH}")
+print(f"Extracteur CNN sauvegardé : {CNN_PATH}")
+```
