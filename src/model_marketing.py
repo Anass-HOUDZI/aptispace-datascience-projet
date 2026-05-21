@@ -69,10 +69,12 @@ def train_hybrid_pipeline(filepath: str):
     y_pred = xgb_model.predict(X_hybrid_test)
     print(classification_report(y_test, y_pred))
 
-    # Persistance des arrays d'évaluation pour le notebook 06
+    # Persistance des arrays d'évaluation pour les notebooks 06 et 07
+    y_proba = xgb_model.predict_proba(X_hybrid_test)[:, 1]
     processed_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data', 'processed'))
     os.makedirs(processed_dir, exist_ok=True)
-    joblib.dump({'y_test': y_test, 'y_pred': y_pred}, os.path.join(processed_dir, 'eval_data.pkl'))
+    joblib.dump({'y_test': y_test, 'y_pred': y_pred, 'y_proba': y_proba},
+                os.path.join(processed_dir, 'eval_data.pkl'))
 
     # --- SAUVEGARDE DES GRAPHIQUES ---
     assets_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'report', 'assets'))

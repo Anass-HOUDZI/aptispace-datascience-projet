@@ -1,0 +1,189 @@
+---
+execute:
+  echo: false
+  warning: false
+---
+
+# 📋 Synthèse Exécutive
+
+> **Problématique résolue :** Identifier, parmi 2 240 clients, les profils les plus susceptibles de répondre à une campagne marketing — afin de concentrer le budget sur les acheteurs potentiels et réduire le gaspillage publicitaire.
+
+> **Approche :** Pipeline hybride en deux étapes — un réseau de neurones convolutif (CNN 1D) extrait les **motifs d'engagement temporel** sur l'historique des 5 campagnes, puis un classifieur **XGBoost** combine ces signaux latents avec les données socio-démographiques et financières pour produire un score de propension à l'achat.
+
+---
+
+## Indicateurs Clés de Performance
+
+```{python}
+import os, sys, warnings
+warnings.filterwarnings('ignore')
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+sys.path.insert(0, os.path.abspath('../../src'))
+
+import joblib
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
+import seaborn as sns
+from sklearn.metrics import classification_report, roc_auc_score
+
+sns.set_theme(style="whitegrid", context="paper")
+
+processed_dir = os.path.abspath('../../data/processed')
+assets_dir = os.path.abspath('../../report/assets')
+
+xgb_model  = joblib.load(os.path.join(processed_dir, 'xgb_model.pkl'))
+eval_data  = joblib.load(os.path.join(processed_dir, 'eval_data.pkl'))
+y_test     = eval_data['y_test']
+y_pred     = eval_data['y_pred']
+```
+
+```{python}
+report = classification_report(y_test, y_pred, output_dict=True)
+auc    = roc_auc_score(y_test, y_pred)
+
+kpis = {
+    "Recall — Acheteurs détectés"  : f"{report['1']['recall']:.0%}",
+    "Précision — Alertes fiables"  : f"{report['1']['precision']:.0%}",
+    "F1-Score — Équilibre global"  : f"{report['1']['f1-score']:.0%}",
+    "AUC-ROC"                      : f"{auc:.2f}",
+    "Accuracy globale"             : f"{report['accuracy']:.0%}",
+}
+
+fig, axes = plt.subplots(1, 5, figsize=(14, 2.2))
+colors = ['#2563eb', '#16a34a', '#9333ea', '#ea580c', '#64748b']
+
+for ax, (label, value), color in zip(axes, kpis.items(), colors):
+    ax.set_facecolor(color)
+    ax.text(0.5, 0.62, value, ha='center', va='center',
+            fontsize=22, fontweight='bold', color='white',
+            transform=ax.transAxes)
+    ax.text(0.5, 0.22, label, ha='center', va='center',
+            fontsize=7.5, color='white', transform=ax.transAxes,
+            wrap=True)
+    ax.set_xticks([]); ax.set_yticks([])
+    for spine in ax.spines.values():
+        spine.set_visible(False)
+
+fig.suptitle('Tableau de Bord — Modèle Hybride CNN + XGBoost', fontsize=12,
+             fontweight='bold', y=1.05)
+plt.tight_layout()
+plt.show()
+```
+
+---
+
+# 📊 Visualisation Métier
+
+## Top 10 des Leviers d'Achat
+
+Le graphique ci-dessous montre les **10 variables qui influencent le plus la décision d'achat** selon le modèle. Ce sont les leviers sur lesquels l'équipe CRM peut agir en priorité.
+
+```{python}
+df_raw = pd.read_parquet(os.path.join(processed_dir, 'marketing_clean.parquet'))
+campaign_cols = ['AcceptedCmp1', 'AcceptedCmp2', 'AcceptedCmp3', 'AcceptedCmp4', 'AcceptedCmp5']
+exclude = set(campaign_cols + ['Response', 'ID', 'Dt_Customer', 'Education', 'Income_Strata'])
+tab_cols = [c for c in df_raw.select_dtypes(include='number').columns if c not in exclude]
+feat_names = tab_cols + [f'Motif_Temporel_{i+1}' for i in range(8)]
+
+imp_df = (
+    pd.DataFrame({'Feature': feat_names, 'Importance': xgb_model.feature_importances_})
+    .sort_values('Importance', ascending=False)
+    .head(10)
+)
+
+palette = ['#1e40af' if 'Motif' in f else '#0ea5e9' for f in imp_df['Feature']]
+
+fig, ax = plt.subplots(figsize=(9, 5))
+bars = ax.barh(imp_df['Feature'][::-1], imp_df['Importance'][::-1],
+               color=palette[::-1], edgecolor='white', height=0.65)
+ax.set_xlabel('Score d\'importance (gain XGBoost)', fontsize=10)
+ax.set_title('Top 10 des Facteurs Prédictifs d\'Achat', fontsize=13,
+             fontweight='bold', pad=12)
+
+patch_tab  = mpatches.Patch(color='#0ea5e9', label='Variable tabulaire (profil client)')
+patch_cnn  = mpatches.Patch(color='#1e40af', label='Motif temporel (extrait par CNN 1D)')
+ax.legend(handles=[patch_tab, patch_cnn], loc='lower right', fontsize=9)
+
+sns.despine(left=True)
+ax.tick_params(axis='y', labelsize=9)
+plt.tight_layout()
+plt.show()
+```
+
+> **Lecture :** Les variables en **bleu foncé** sont les vecteurs latents extraits par le CNN 1D — elles capturent des séquences d'engagement promotionnel que les variables brutes ne peuvent pas exprimer seules. Leur présence dans le Top 10 valide l'apport de la brique Deep Learning.
+
+---
+
+## Efficacité du Ciblage — Courbe de Gains Cumulés
+
+Ce graphique répond à la question clé de l'équipe marketing : **Si je contacte seulement X% de mes clients (les mieux scorés), combien d'acheteurs réels vais-je capturer ?**
+
+```{python}
+xgb_proba = eval_data['y_proba']
+
+order       = np.argsort(-xgb_proba)
+y_sorted    = y_test[order]
+gains       = np.cumsum(y_sorted) / y_sorted.sum()
+baseline    = np.linspace(0, 1, len(y_test))
+pct_contact = np.linspace(0, 1, len(y_test)) * 100
+
+fig, ax = plt.subplots(figsize=(8, 5))
+ax.plot(pct_contact, gains * 100,  color='#2563eb', lw=2.5, label='Modèle hybride')
+ax.plot(pct_contact, baseline * 100, color='#94a3b8', lw=1.5,
+        linestyle='--', label='Ciblage aléatoire (baseline)')
+ax.fill_between(pct_contact, gains * 100, baseline * 100,
+                alpha=0.12, color='#2563eb')
+
+# Annotation cible 30%
+idx30 = int(0.30 * len(y_test))
+gain30 = gains[idx30] * 100
+ax.annotate(f'30% clients contactés\n→ {gain30:.0f}% acheteurs capturés',
+            xy=(30, gain30), xytext=(42, gain30 - 12),
+            arrowprops=dict(arrowstyle='->', color='#1e293b'),
+            fontsize=9, color='#1e293b',
+            bbox=dict(boxstyle='round,pad=0.3', fc='white', ec='#cbd5e1'))
+
+ax.set_xlabel('% de clients contactés (triés par score décroissant)', fontsize=10)
+ax.set_ylabel('% d\'acheteurs capturés', fontsize=10)
+ax.set_title('Courbe de Gains Cumulés — Efficacité du Ciblage', fontsize=13,
+             fontweight='bold', pad=12)
+ax.legend(fontsize=10)
+ax.set_xlim(0, 100); ax.set_ylim(0, 105)
+sns.despine()
+plt.tight_layout()
+plt.show()
+```
+
+> **Impact métier :** En contactant seulement **30% des clients** sélectionnés par le modèle (au lieu de 100%), l'entreprise capture une proportion bien supérieure à celle d'un ciblage aléatoire — ce qui se traduit directement par une **réduction du coût par conversion**.
+
+---
+
+# ⚠️ Limites du Modèle
+
+| Limite | Description | Impact |
+|--------|-------------|--------|
+| **Déséquilibre résiduel** | Malgré `scale_pos_weight`, le Recall reste à 55% — 45% des acheteurs réels sont manqués | Budget marketing sous-optimal si ciblage strict |
+| **Gel dans le temps** | Le modèle est entraîné sur des données jusqu'en 2014 (année de référence) | Risque de dérive si les comportements évoluent |
+| **Causalité absente** | Les features sont corrélées à `Response` mais pas nécessairement causales | Les recommandations CRM doivent être validées par A/B test |
+| **Données image synthétiques** | La brique CNN 2D (notebook 04) utilise des images générées, non réelles | L'architecture est validée fonctionnellement, pas sur des données clients réelles |
+| **Features manquantes** | Absence de données RFM récentes, de canaux digitaux (email, app) ou de retours SAV | Un profil client plus riche améliorerait significativement le Recall |
+
+---
+
+# 🔭 Recommandations et Perspectives
+
+## Actions immédiates pour l'équipe CRM
+
+1. **Scorer les 2 240 clients** avec le modèle entraîné et constituer un segment prioritaire (score > 0.5) pour la prochaine campagne.
+2. **Activer les 3 leviers principaux** identifiés dans le Top 10 : le montant historique dépensé en vins, le revenu du foyer, et les motifs temporels d'engagement.
+3. **Mettre en place un A/B test** : cibler 50% du segment prioritaire avec la nouvelle stratégie, l'autre 50% avec la stratégie habituelle, pour mesurer l'impact réel du modèle.
+
+## Pistes d'amélioration du modèle
+
+- **Données enrichies :** Intégrer des signaux digitaux (taux d'ouverture email, clics web) pour améliorer le Recall.
+- **Ré-entraînement périodique :** Mettre en place un pipeline de re-training mensuel pour éviter la dérive du modèle.
+- **Seuil de décision adaptatif :** Ajuster le seuil de classification (par défaut 0.5) en fonction du coût marginal d'une prise de contact vs. le gain attendu d'une conversion.
+- **Explicabilité (SHAP) :** Ajouter des valeurs SHAP pour expliquer individuellement chaque prédiction aux équipes métier.
+- **Modèles alternatifs :** Tester LightGBM ou un réseau de neurones tabulaire (TabNet) pour comparer les performances sur ce dataset.

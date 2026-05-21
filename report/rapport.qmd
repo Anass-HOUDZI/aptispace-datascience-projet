@@ -247,15 +247,7 @@ Les métriques retenues sont le **Recall sur la classe 1** (minimiser les faux n
 
 # Data Storytelling et Communication {#sec-storytelling}
 
-## Recommandations Stratégiques / Métier
-*À rédiger par les étudiants : Formulez des recommandations stratégiques, opérationnelles et innovantes basées sur vos découvertes analytiques et prédictives pour guider les décideurs.*
-
-[Rédiger vos recommandations ici]
-
-## Limites et Perspectives
-*À rédiger par les étudiants : Identifiez honnêtement les biais ou limites de votre approche et proposez des pistes d'amélioration futures (ex: intégration de données externes réelles, modélisation plus poussée).*
-
-[Rédiger les limites et perspectives ici]
+{{< include notebooks/07_communication.qmd >}}
 
 Ce document dynamique a été compilé en Quarto [@quarto2024].
 
