@@ -1,4 +1,4 @@
-# 🚀 Mon Projet Data Science
+# Customer Personality Analysis
 
 [![CI Compilation Pipeline](https://github.com/Anass-HOUDZI/aptispace-datascience-projet/actions/workflows/ci.yml/badge.svg)](https://github.com/Anass-HOUDZI/aptispace-datascience-projet/actions/workflows/ci.yml)
 
