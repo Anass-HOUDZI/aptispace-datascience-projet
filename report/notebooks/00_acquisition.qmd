@@ -1,0 +1,61 @@
+# Acquisition des Donnees {#sec-acquisition}
+
+Ce chapitre couvre l'ingestion du fichier brut marketing_campaign.csv, l'audit memoire et la premiere inspection qualite.
+
+## Chargement du Dataset Brut
+
+`{python}
+import os, sys, warnings
+warnings.filterwarnings("ignore")
+sys.path.insert(0, os.path.abspath("../../src"))
+import pandas as pd, numpy as np
+
+RAW_PATH = os.path.abspath("../../data/raw/marketing_campaign.csv")
+df = pd.read_csv(RAW_PATH, sep="\t", engine="c")
+print(f"Dimensions : {df.shape[0]} lignes x {df.shape[1]} colonnes")
+print(f"Memoire    : {df.memory_usage(deep=True).sum()/1024:.1f} KB")
+`
+
+## Types et Valeurs Manquantes
+
+`{python}
+info = pd.DataFrame({"dtype": df.dtypes, "nulls": df.isnull().sum(),
+    "null_%": (df.isnull().sum()/len(df)*100).round(2), "unique": df.nunique()})
+print(info.to_string())
+`
+
+## Downcasting - Optimisation Memoire
+
+`{python}
+mem_avant = df.memory_usage(deep=True).sum()/1024
+for col in df.select_dtypes(include=["int64"]).columns:
+    df[col] = pd.to_numeric(df[col], downcast="integer")
+for col in df.select_dtypes(include=["float64"]).columns:
+    df[col] = pd.to_numeric(df[col], downcast="float")
+mem_apres = df.memory_usage(deep=True).sum()/1024
+gain = (1 - mem_apres/mem_avant)*100
+print(f"Avant : {mem_avant:.1f} KB | Apres : {mem_apres:.1f} KB | Gain : -{gain:.0f}%")
+`
+
+## Audit Qualite - Anomalies Detectees
+
+| Anomalie | Variable | Valeur | Action |
+|----------|----------|--------|--------|
+| Valeurs manquantes MNAR | Income | 24 NaN | Flag binaire + imputation mediane strate |
+| Outliers physiques | Year_Birth | 1893, 1900 | Masquage (age > 100 ans) |
+| Modalites non standards | Marital_Status | YOLO, Absurd | Harmonisation -> Other |
+| Format date texte | Dt_Customer | DD-MM-YYYY | Conversion datetime64 + Customer_Days |
+
+`{python}
+print("Valeurs manquantes Income :", df["Income"].isnull().sum())
+print("Annees aberrantes :", df[df["Year_Birth"] < 1920]["Year_Birth"].tolist())
+print("Marital_Status :", df["Marital_Status"].value_counts().to_dict())
+`
+
+## Distribution de la Variable Cible
+
+`{python}
+print(df["Response"].value_counts(normalize=True).round(3).to_string())
+ratio = (df.Response==0).sum() / (df.Response==1).sum()
+print(f"\nDesequilibre => scale_pos_weight recommande : {ratio:.1f}")
+`

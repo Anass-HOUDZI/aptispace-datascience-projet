@@ -1,4 +1,4 @@
----
+﻿---
 title: "Optimisation des Campagnes Marketing par Apprentissage Automatique Hybride"
 subtitle: "Projet Fil Rouge Data Science — Pipeline CNN 1D + XGBoost"
 author:
@@ -51,6 +51,12 @@ Notre approche hybride couple deux sources de signal :
 - **Branche séquentielle** : l'historique des 5 campagnes (`AcceptedCmp1` à `AcceptedCmp5`) est tensorisé et analysé par un CNN 1D Keras pour extraire des motifs d'engagement temporel latents.
 
 Les livrables attendus sont : un score de Recall élevé sur la classe 1 (acheteurs), une matrice de confusion interprétable et un classement des facteurs d'achat pour guider l'équipe CRM.
+
+---
+
+# Acquisition des Donnes Brutes {#sec-acquisition}
+
+{{< include notebooks/00_acquisition.qmd >}}
 
 ---
 
@@ -256,3 +262,4 @@ Ce document dynamique a été compilé en Quarto [@quarto2024].
 
 ::: {#refs}
 :::
+
