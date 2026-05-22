@@ -1,6 +1,5 @@
-# Optimisation des Campagnes Marketing par Apprentissage Automatique Hybride
+# Optimisation des campagnes marketing par apprentissage automatique 
 Étudiant 1 : Anass HOUDZI, Étudiant2 : Baptiste MAES
-
 
 - [Introduction et Contexte Métier](#introduction-et-contexte-métier)
   - [Contexte du Projet](#contexte-du-projet)
@@ -40,21 +39,6 @@
   - [Cartographie de l'utilisation de l'IA](#cartographie-de-lutilisation-de-lia)
   - [Principes de Rigueur et Responsabilité](#principes-de-rigueur-et-responsabilité)
 - [Bibliographie](#bibliographie)
-
-## 📥 Téléchargements (Dernière Version)
-
-[![CI Compilation Pipeline](https://github.com/Anass-HOUDZI/aptispace-datascience-projet/actions/workflows/ci.yml/badge.svg)](https://github.com/Anass-HOUDZI/aptispace-datascience-projet/actions/workflows/ci.yml)
-
-Accédez directement aux derniers artéfacts générés depuis notre dernière release :
-
-- 📄 **[Rapport Complet (PDF)](https://github.com/Anass-HOUDZI/aptispace-datascience-projet/releases/latest/download/rapport.pdf)**
-- 🌐 **[Rapport Interactif (HTML)](https://github.com/Anass-HOUDZI/aptispace-datascience-projet/releases/latest/download/rapport.html)**
-- 📖 **[Rapport (Markdown GFM)](https://github.com/Anass-HOUDZI/aptispace-datascience-projet/releases/latest/download/README.md)**
-- 📚 **[Code Source Complet (ZIP)](https://github.com/Anass-HOUDZI/aptispace-datascience-projet/releases/latest/download/sources.zip)**
-- 📓 **[Notebooks Originaux (ZIP)](https://github.com/Anass-HOUDZI/aptispace-datascience-projet/releases/latest/download/notebooks.zip)**
-- 🪵 **[Journaux d'Exécution (ZIP)](https://github.com/Anass-HOUDZI/aptispace-datascience-projet/releases/latest/download/logs.zip)**
-
-> **Note :** Si vous venez de faire un *push*, laissez quelques minutes au pipeline GitHub Actions pour recompiler les documents et mettre à jour la release.
 
 ------------------------------------------------------------------------
 
@@ -606,24 +590,6 @@ En appliquant une dernière fois le framework **O.I.A.** du cours à l'ensemble 
 Ce notebook clôt le **cycle complet de la donnée** : acquisition → nettoyage → visualisation → analyse exploratoire → modélisation → évaluation → **communication**. Parti d'un simple fichier de données clients, le projet aboutit à un pipeline hybride CNN 1D + XGBoost capable d'identifier les acheteurs potentiels, évalué rigoureusement et — surtout — **honnêtement communiqué** à l'équipe décisionnelle.
 
 > 🎯 **Recommandation finale : en contactant les 30 % de clients les mieux scorés par le modèle hybride, l'entreprise capture la majorité de ses acheteurs potentiels tout en réduisant significativement son budget de prospection.**
-
-------------------------------------------------------------------------
-
-# Utilisation de l'Intelligence Artificielle
-
-Dans une démarche de transparence scientifique et académique, cette section détaille la manière dont les outils d'Intelligence Artificielle (IA) générative ont été intégrés tout au long de la réalisation de ce projet.
-
-## Cartographie de l'utilisation de l'IA
-
-| Outil d'IA | Cas d'usage (Pourquoi ?) | Méthode d'utilisation (Comment ?) | Rôle et Validation Humaine |
-|:---|:---|:---|:---|
-| **[Outil d'IA]** | *[À compléter par les étudiants]* | *[À compléter par les étudiants]* | *[À compléter par les étudiants]* |
-
-## Principes de Rigueur et Responsabilité
-
-1. **Responsabilité intellectuelle** : L'équipe assume l'entière responsabilité des analyses, des choix de modèles et des conclusions présentées dans ce rapport.
-2. **Lutte contre les hallucinations** : Chaque suggestion technique a fait l'objet d'une validation empirique sur les données réelles du projet.
-3. **Protection des données** : Aucun jeu de données confidentiel ou sensible n'a été soumis à des modèles tiers en ligne.
 
 ------------------------------------------------------------------------
 
