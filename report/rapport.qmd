@@ -1,10 +1,9 @@
 ---
-title: "Mon Projet Data Science"
-subtitle: "Projet Fil Rouge Data Science - Sujet Libre"
+title: "Optimisation des Campagnes Marketing par Apprentissage Automatique Hybride"
+subtitle: "Projet Fil Rouge Data Science — Pipeline CNN 1D + XGBoost"
 author:
   - "Étudiant(e) 1 : Anass HOUDZI"
   - "Étudiant(e) 2 : Baptiste MAES"
-  # Remplacer par vos noms et votre numéro de groupe
 date: today
 format:
   html:
@@ -32,7 +31,7 @@ link-citations: true
 
 # Introduction et Contexte Métier {#sec-intro}
 
-[![CI Compilation Pipeline](https://github.com/aptitek/aptispace-datascience-projet/actions/workflows/ci.yml/badge.svg)](https://github.com/aptitek/aptispace-datascience-projet/actions/workflows/ci.yml)
+[![CI Compilation Pipeline](https://github.com/Anass-HOUDZI/aptispace-datascience-projet/actions/workflows/ci.yml/badge.svg)](https://github.com/Anass-HOUDZI/aptispace-datascience-projet/actions/workflows/ci.yml)
 
 *À rédiger par les étudiants : Présentez ici le contexte global de votre projet, la problématique métier que vous cherchez à résoudre, les questions scientifiques soulevées et les opportunités d'aide à la décision sur la base de vos données.*
 

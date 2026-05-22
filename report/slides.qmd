@@ -1,0 +1,147 @@
+---
+title: "🎓 Optimisation des Campagnes Marketing"
+subtitle: "Prédiction de la Propension à l'Achat — Pipeline Hybride CNN 1D + XGBoost"
+author: "Anass HOUDZI & Baptiste MAES"
+date: today
+format:
+  revealjs:
+    theme: solarized
+    transition: slide
+    slide-number: true
+    preview-links: auto
+    chalkboard: true
+    code-fold: show
+---
+
+# 🎯 Problématique Métier
+
+## Contexte : Marketing & Ciblage Client
+
+### Enjeu Stratégique
+
+- **2 240 clients** suivis sur 18 mois (historique transactionnel + campagnes)
+- **Taux de conversion < 15 %** : envoyer à toute la base = 85 % du budget gaspillé
+- **Objectif** : identifier les profils acheteurs *avant* la prochaine campagne
+
+### Source de Données
+
+| Fichier | Taille | Variables clés |
+|---|---|---|
+| `marketing_campaign.csv` | 2 240 lignes × 29 colonnes | Profils socio-démo, dépenses, historique 5 campagnes |
+
+> Il s'agit d'un problème de **classification binaire déséquilibrée** (85 % non-acheteurs / 15 % acheteurs) :
+> un modèle naïf qui prédit toujours 0 atteint 85 % d'accuracy sans rien apprendre.
+
+---
+
+# 🧹 Chapitres 1 & 2 : Acquisition & Data Wrangling
+
+## Audit & Nettoyage des Données
+
+### Anomalies Détectées
+
+- **24 valeurs manquantes** sur `Income` (type MNAR → flag binaire `Income_Missing_Flag` créé avant imputation)
+- **2 outliers** `Year_Birth` ∈ {1893, 1900} — valeurs physiquement aberrantes, masquées
+- `Marital_Status` : modalités non standards (`YOLO`, `Absurd`, `Alone`) → harmonisées en `Other`
+- `Dt_Customer` : texte → `datetime64[ns]`, ancienneté `Customer_Days` calculée
+
+### Pipeline de Nettoyage (`src/data_clean.py`)
+
+1. `load_raw_data` — downcasting natif des types numériques (−60 % mémoire)
+2. `clean_dates` — format ISO 8601 + calcul `Customer_Days`
+3. `handle_outliers` — masquage des valeurs aberrantes + flag MNAR
+4. `impute_missing_values` — imputation par médiane de strate (`Education × Marital_Status`)
+5. `feature_engineering` — `Age`, `Total_Spent`, encodage ordinal de `Education`
+
+> **Résultat :** `data/processed/marketing_clean.parquet` — 2 238 clients exploitables, 0 valeur manquante.
+
+---
+
+# 📊 Chapitres 3 & 4 : EDA & Visualisation
+
+## Exploration des Données & Insights Majeurs
+
+### 5 Constats Clés Découverts
+
+1. **`MntWines` est le signal le plus discriminant** — les acheteurs dépensent en moyenne **5× plus en vins**
+2. **Le revenu prédit la conversion** — quartile supérieur : 22 % de taux de conversion vs 8 % pour le quartile inférieur
+3. **L'historique de campagnes est décisif** — ≥ 2 campagnes acceptées → probabilité de conversion de **56 % (×4)**
+4. **Déséquilibre 85/15 à corriger** — `scale_pos_weight` indispensable en modélisation
+5. **Les clients parents répondent moins** — `Kidhome` et `Teenhome` négativement corrélés à `Response`
+
+::: {.fragment}
+### Matrice de Corrélation (Spearman)
+
+Trois clusters identifiés : **dépenses** (`MntWines` ↔ `MntMeat`, ρ > 0.6), **comportemental** (`NumCatalogPurchases` → `Response`), **démographique** (`Age` peu prédictif seul)
+
+➡️ Ces insights orientent directement la sélection des variables pour le Jalon 2.
+:::
+
+---
+
+# 🧠 Chapitre 5 : Modélisation Hybride
+
+## Architecture CNN 1D + XGBoost
+
+::: {.panel-tabset}
+### Branche Tabulaire (XGBoost)
+
+- **Variables** : `Income`, `MntWines`, `MntMeat`, `NumWebPurchases`, `Recency`, `Age`…
+- **Correction déséquilibre** : `scale_pos_weight = n_négatifs / n_positifs ≈ 5.7`
+- **Sortie** : score de propension + importance Gini → leviers CRM directement actionnables
+
+### Branche Séquentielle (CNN 1D)
+
+- **Entrée** : séquence `AcceptedCmp1–5` tensorisée en `N × 5 × 1`
+- **Architecture** : `Conv1D(16, relu) → Conv1D(32, relu) → GlobalMaxPooling1D → Dense(8)`
+- **Sortie** : **8 vecteurs latents** capturant les motifs d'engagement temporel
+
+### Fusion Hybride
+
+Concaténation features tabulaires (~15 dims) + embeddings CNN (8 dims) = **vecteur hybride de 23 dimensions** → XGBoost final sur vecteur enrichi
+
+:::
+
+---
+
+# 🧪 Chapitre 6 : Évaluation du Modèle
+
+## Métriques & Résultats sur le Jeu de Test
+
+| Modèle | Recall (cl. 1) | F1-Score (cl. 1) | AUC-ROC | Accuracy |
+| :--- | :---: | :---: | :---: | :---: |
+| Baseline (prédire toujours 0) | 0,00 | 0,00 | 0,50 | 85 % |
+| **XGBoost + CNN 1D (hybride)** | **0,55** | **0,56** | **0,73** | **87 %** |
+
+*Split stratifié 80/20 (`stratify=y`, `random_state=42`), n_test = 448 clients*
+
+> **Impact métier :** En contactant les **30 % de clients les mieux scorés** par le modèle,
+> on capture une proportion d'acheteurs bien supérieure à un ciblage aléatoire,
+> ce qui se traduit directement par une **réduction du coût par conversion**.
+
+---
+
+# 📢 Chapitre 7 : Data Storytelling & Communication
+
+## Synthèse Exécutive & Recommandations
+
+### Récit Structuré (Framework SCQA)
+
+- **S — Situation** : 2 240 clients, taux de conversion < 15 %, campagnes coûteuses
+- **C — Complication** : 85 % du budget gaspillé sur des non-acheteurs sans ciblage
+- **Q — Question** : Peut-on identifier à l'avance les acheteurs potentiels ?
+- **A — Answer** : Oui — les 30 % mieux scorés capturent la majorité des conversions
+
+### Actions CRM Recommandées
+
+1. **Scorer** la base complète avec le modèle → constituer un **segment prioritaire** (score > 0.5)
+2. **Valider** par A/B test : 50 % nouvelle stratégie / 50 % stratégie habituelle
+3. **Améliorer** : intégrer signaux digitaux (email, app) + ré-entraînement mensuel
+
+### Limites Assumées
+
+- Recall = 55 % → 45 % d'acheteurs réels manqués (incertitude épistémique réductible)
+- Données gelées (2012–2014) → risque de dérive du modèle dans le temps
+- Corrélation ≠ causalité — les recommandations CRM doivent être validées expérimentalement
+
+---
