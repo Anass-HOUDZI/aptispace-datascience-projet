@@ -41,7 +41,11 @@ cm = confusion_matrix(y_test, y_pred)
 campaign_cols = ["AcceptedCmp1","AcceptedCmp2","AcceptedCmp3","AcceptedCmp4","AcceptedCmp5"]
 exclude = set(campaign_cols + ["Response","ID","Dt_Customer","Education","Income_Strata"])
 tab_cols = [c for c in df_raw.select_dtypes(include="number").columns if c not in exclude]
-feat_names = tab_cols + [f"Motif_Temporel_{i+1}" for i in range(8)]
+n_total  = len(xgb_model.feature_importances_)
+n_cnn    = 8
+n_tab    = n_total - n_cnn
+tab_names  = (tab_cols + [f"Tab_{i}" for i in range(n_tab)])[:n_tab]
+feat_names = tab_names + [f"Motif_Temporel_{i+1}" for i in range(n_cnn)]
 imp_df = (pd.DataFrame({"Feature": feat_names, "Importance": xgb_model.feature_importances_})
           .sort_values("Importance", ascending=False).head(10))
 
