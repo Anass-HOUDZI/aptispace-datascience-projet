@@ -1,8 +1,7 @@
 # Optimisation des campagnes marketing par apprentissage automatique 
 Étudiant 1 : Anass HOUDZI, Étudiant 2 : Baptiste MAES
 
-# Présentation de projet 
-https://presentation-aptispace-data-science.vercel.app/
+# Présentation interactive :** [voir la démo](https://presentation-aptispace-data-science.vercel.app/)  
 
 # Sommaire
 - [Introduction et Contexte Métier](#introduction-et-contexte-métier)
