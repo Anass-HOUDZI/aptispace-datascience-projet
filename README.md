@@ -62,13 +62,9 @@ Ce projet s'inscrit dans le cadre du Projet Fil Rouge de la formation Data Scien
 
 ## Contexte du Projet
 
-Ce projet s'appuie sur le jeu de données `marketing_campaign.csv` (2 240 clients, 29 variables) qui compile l'historique transactionnel, les profils socio-démographiques et les réponses passées à cinq campagnes promotionnelles d'une entreprise de vente au détail.
+Ce projet s'inscrit dans le cadre du **Projet Fil Rouge** de la formation Data Science & IA d'IPSSI. L'équipe s'est attaquée à une problématique d'**optimisation marketing stratégique** : prédire la propension à l'achat des clients lors d'une campagne promotionnelle, afin de concentrer les budgets sur les profils les plus susceptibles de convertir.
 
-La problématique est stratégique : face à un **taux de conversion inférieur à 15 %**, l'entreprise doit cibler chirurgicalement les profils les plus susceptibles d'acheter lors de la prochaine campagne. Une mauvaise classification entraîne soit un gaspillage budgétaire (faux positifs — contacter des clients qui n'achèteront pas), soit un manque à gagner (faux négatifs — ignorer des acheteurs potentiels).
-
-Pourtant, identifier ces profils reste un défi. Niveau de revenu, historique d'achats par catégorie, comportement multicanal, ancienneté client, réponses aux campagnes précédentes — autant de signaux à combiner sans tomber dans le piège du sur-ajustement.
-
-L'analyse quantitative est ici indispensable car l'intuition commerciale, aussi documentée soit-elle, ne suffit pas à arbitrer entre des hypothèses contradictoires : l'historique de réponses aux campagnes passées forme-t-il des **séquences temporelles discriminantes** ? Le niveau de revenu est-il vraiment le premier prédicteur ? Les dépenses en vins révèlent-elles un profil premium particulièrement réceptif ? Seul un traitement statistique et algorithmique de l'historique permet de trancher.
+Le projet s'appuie sur `marketing_campaign.csv` — **2 240 clients × 29 variables** — compilant l'historique transactionnel, les profils socio-démographiques et les réponses passées à cinq campagnes promotionnelles d'une entreprise de vente au détail (source Kaggle — *ifoodanalytics*, données 2012–2014).
 
 ## Objectif Analytique
 
@@ -560,7 +556,7 @@ Le récit complet, structuré selon le framework **SCQA** du cours :
 
 Le graphique de l'importance des variables expose les **10 facteurs qui influencent le plus la décision d'achat** selon le modèle. Les **vecteurs latents extraits par le CNN 1D** (`Motif_Temporel_1` à `_8`) apparaissent dans le Top 10, validant l'apport de la brique Deep Learning : les séquences d'engagement aux campagnes passées contiennent un signal prédictif que les variables brutes ne peuvent pas exprimer seules.
 
-> **Lecture :** Les variables en bleu foncé sont les vecteurs latents CNN 1D — elles capturent des séquences d'engagement promotionnel que les variables tabulaires brutes ne peuvent pas exprimer. Leur présence dans le Top 10 valide l'apport de la brique Deep Learning.
+**Lecture :** Les variables en bleu foncé sont les vecteurs latents CNN 1D — elles capturent des séquences d'engagement promotionnel que les variables tabulaires brutes ne peuvent pas exprimer. Leur présence dans le Top 10 valide l'apport de la brique Deep Learning.
 
 ### Courbe de Gains Cumulés
 
@@ -598,12 +594,40 @@ En appliquant une dernière fois le framework **O.I.A.** du cours à l'ensemble 
 3. **Pour l'amélioration du modèle** : intégrer des signaux digitaux (taux d'ouverture email, clics web) et mettre en place un pipeline de ré-entraînement mensuel pour éviter la dérive, et ajouter des **valeurs SHAP** pour expliquer individuellement chaque prédiction aux équipes métier.
 
 ------------------------------------------------------------------------
+Ce projet clôt le **cycle complet de la donnée** :
+Acquisition → Nettoyage → EDA → Feature Engineering → Modélisation → Évaluation → Communication
 
-#### 🌉 Conclusion du projet
+Parti d'un simple fichier CSV de 2 240 clients, le projet aboutit à :
 
-Ce notebook clôt le **cycle complet de la donnée** : acquisition → nettoyage → visualisation → analyse exploratoire → modélisation → évaluation → **communication**. Parti d'un simple fichier de données clients, le projet aboutit à un pipeline hybride CNN 1D + XGBoost capable d'identifier les acheteurs potentiels, évalué rigoureusement et — surtout — **honnêtement communiqué** à l'équipe décisionnelle.
+| Livrable | Statut |
+|---|:---:|
+| Dataset nettoyé et audité (`marketing_clean.parquet`, 2 238 clients) | ✅ |
+| 5 insights EDA structurant la modélisation | ✅ |
+| Pipeline hybride CNN 1D + XGBoost entraîné et persisté | ✅ |
+| Évaluation rigoureuse sur jeu de test stratifié (Recall 0,55 · AUC-ROC 0,73) | ✅ |
+| Tableau de bord interactif Plotly + Top 10 leviers d'achat | ✅ |
+| Synthèse exécutive structurée (SCQA · O.I.A. · Pyramide de Minto) | ✅ |
+| Rapport généré automatiquement (PDF + HTML interactif via Quarto CI/CD) | ✅ |
 
-> 🎯 **Recommandation finale : en contactant les 30 % de clients les mieux scorés par le modèle hybride, l'entreprise capture la majorité de ses acheteurs potentiels tout en réduisant significativement son budget de prospection.**
+### Ce que ce projet démontre
+
+**Techniquement**, la combinaison CNN 1D + XGBoost sur un jeu de données tabulaire enrichi de séquences temporelles est une approche solide pour les problèmes de propension à l'achat en marketing. Le CNN 1D apporte **+7 points de Recall** par rapport au XGBoost seul, en captant des motifs d'engagement promotionnel latents que les variables brutes ne peuvent pas exprimer.
+
+**Méthodologiquement**, la rigueur appliquée à chaque étape — audit MNAR, anti-fuite de données, split stratifié, correction du déséquilibre sans suréchantillonnage, communication honnête de l'incertitude — reflète les standards d'un projet de Data Science production-ready.
+
+**Opérationnellement**, le modèle est actionnable immédiatement : scorer la base clients, constituer le segment prioritaire (score > 0,5), et valider l'impact par A/B test avant généralisation.
+
+### Perspectives d'amélioration
+
+Pour porter ce projet en production et améliorer les performances :
+
+- **Court terme :** implémenter les valeurs SHAP pour l'explicabilité individuelle des prédictions ; ajouter une validation croisée stratified k-fold (k=5) pour des métriques plus robustes
+- **Moyen terme :** intégrer des signaux digitaux récents (taux d'ouverture email, clics web, RFM actualisé) et mettre en place un pipeline de ré-entraînement mensuel automatisé (MLflow ou DVC)
+- **Long terme :** passer à un modèle de propension en temps réel avec scoring à la volée via une API FastAPI / BentoML, alimentée par un feature store mis à jour en continu
+
+---
+
+**Recommandation finale :** en contactant les **30 % de clients les mieux scorés** par le modèle hybride, l'entreprise capture la majorité de ses acheteurs potentiels tout en réduisant significativement son budget de prospection — une décision à valider impérativement par A/B test avant tout déploiement à grande échelle.
 
 ------------------------------------------------------------------------
 
