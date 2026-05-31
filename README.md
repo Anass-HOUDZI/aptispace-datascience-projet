@@ -1,7 +1,7 @@
 # Optimisation des campagnes marketing par apprentissage automatique 
 Étudiant 1 : Anass HOUDZI, Étudiant 2 : Baptiste MAES
 
-# Présentation interactive :** [voir la démo](https://presentation-aptispace-data-science.vercel.app/)  
+# Présentation interactive : [voir la démo](https://presentation-aptispace-data-science.vercel.app/)  
 
 # Sommaire
 - [Introduction et Contexte Métier](#introduction-et-contexte-métier)
@@ -45,9 +45,20 @@
 
 ------------------------------------------------------------------------
 
-# Introduction et Contexte Métier
+# Introduction
 
 Ce projet s'inscrit dans le cadre du Projet Fil Rouge de la formation Data Science & IA d'IPSSI. L'équipe a choisi de s'attaquer à une problématique d'optimisation marketing stratégique : **prédire la propension à l'achat des clients lors d'une campagne promotionnelle**, afin de concentrer les budgets sur les profils les plus susceptibles de convertir.
+
+## Résultats en un coup d'œil
+
+| Métrique | Score |
+|---|---|
+| Accuracy | 87 % |
+| Recall (acheteurs) | 0,55 |
+| F1-Score | 0,56 |
+| AUC-ROC | *à compléter* |
+
+> **Impact business estimé :** cibler les 30 % de clients à score > 0,5 permet de capturer la majorité des convertisseurs.
 
 ## Contexte du Projet
 
