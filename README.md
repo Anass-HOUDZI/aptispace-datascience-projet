@@ -2,8 +2,9 @@
 Étudiant 1 : Anass HOUDZI, Étudiant2 : Baptiste MAES
 
 # Présentation de projet 
-https://presentation-aptispace-data-science.vercel.app/
+# https://presentation-aptispace-data-science.vercel.app/
 
+# Sommaire
 - [Introduction et Contexte Métier](#introduction-et-contexte-métier)
   - [Contexte du Projet](#contexte-du-projet)
   - [Objectif Analytique](#objectif-analytique)
